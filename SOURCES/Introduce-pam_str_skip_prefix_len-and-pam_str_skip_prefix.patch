@@ -1,0 +1,54 @@
+From 584c53979874cd0caeb13d44d5477c81155fa285 Mon Sep 17 00:00:00 2001
+From: "Dmitry V. Levin" <ldv@altlinux.org>
+Date: Mon, 16 Mar 2020 21:02:18 +0000
+Subject: [PATCH] Introduce pam_str_skip_prefix_len and pam_str_skip_prefix
+
+Every time I see a code like
+  if (!strncmp(*argv,"user_readenv=",13))
+    *user_readenv = atoi(13+*argv);
+my eyes are bleeding.
+
+Introduce a new helper inline function pam_str_skip_prefix_len() and
+a new macro pam_str_skip_prefix() on top of it, to be used in subsequent
+commits to cleanup the ugliness.
+
+* libpam/include/pam_inline.h: Include <string.h>.
+(pam_str_skip_prefix_len): New function.
+(pam_str_skip_prefix): New macro.
+
+Backported-by: Sai Harsha <ssuryad@amazon.com>
+---
+ libpam/include/pam_inline.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/libpam/include/pam_inline.h b/libpam/include/pam_inline.h
+index d93f847402..2e3a8d6a9d 100644
+--- a/libpam/include/pam_inline.h
++++ b/libpam/include/pam_inline.h
+@@ -9,6 +9,7 @@
+ #define PAM_INLINE_H
+ 
+ #include "pam_cc_compat.h"
++#include <string.h>
+ 
+ /*
+  * Evaluates to
+@@ -34,4 +35,18 @@
+ /* Evaluates to the number of elements in the specified array.  */
+ #define PAM_ARRAY_SIZE(a_)		(sizeof(a_) / sizeof((a_)[0]) + PAM_MUST_BE_ARRAY(a_))
+ 
++/*
++ * Returns NULL if STR does not start with PREFIX,
++ * or a pointer to the first char in STR after PREFIX.
++ * The length of PREFIX is specified by PREFIX_LEN.
++ */
++static inline const char *
++pam_str_skip_prefix_len(const char *str, const char *prefix, size_t prefix_len)
++{
++	return strncmp(str, prefix, prefix_len) ? NULL : str + prefix_len;
++}
++
++#define pam_str_skip_prefix(str_, prefix_)	\
++	pam_str_skip_prefix_len((str_), (prefix_), sizeof(prefix_) - 1 + PAM_MUST_BE_ARRAY(prefix_))
++
+ #endif /* PAM_INLINE_H */

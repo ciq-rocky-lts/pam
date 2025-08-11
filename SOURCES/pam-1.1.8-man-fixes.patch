@@ -1,0 +1,41 @@
+diff -up Linux-PAM-1.1.8/modules/pam_tty_audit/pam_tty_audit.8.xml.manfix Linux-PAM-1.1.8/modules/pam_tty_audit/pam_tty_audit.8.xml
+--- Linux-PAM-1.1.8/modules/pam_tty_audit/pam_tty_audit.8.xml.manfix	2017-11-02 14:04:25.908425629 +0100
++++ Linux-PAM-1.1.8/modules/pam_tty_audit/pam_tty_audit.8.xml	2019-08-06 14:38:58.826456399 +0200
+@@ -149,6 +149,13 @@
+       greater than or equal to <replaceable>min_uid</replaceable> will be
+       matched.
+     </para>
++    <para>
++      Please note that passwords in some circumstances may be logged by TTY auditing
++      even if the <option>log_passwd</option> is not used. For example all input to
++      a ssh session will be logged - even if there is a password being typed into
++      some software running at the remote host because only the local TTY state
++      affects the local TTY auditing.
++    </para>
+   </refsect1>
+ 
+   <refsect1 id='pam_tty_audit-examples'>
+diff -up Linux-PAM-1.1.8/modules/pam_wheel/pam_wheel.8.xml.manfix Linux-PAM-1.1.8/modules/pam_wheel/pam_wheel.8.xml
+--- Linux-PAM-1.1.8/modules/pam_wheel/pam_wheel.8.xml.manfix	2013-06-18 16:11:21.000000000 +0200
++++ Linux-PAM-1.1.8/modules/pam_wheel/pam_wheel.8.xml	2019-08-06 14:38:01.938442949 +0200
+@@ -43,8 +43,8 @@
+     <title>DESCRIPTION</title>
+     <para>
+       The pam_wheel PAM module is used to enforce the so-called
+-      <emphasis>wheel</emphasis> group. By default it permits root
+-      access to the system if the applicant user is a member of the
++      <emphasis>wheel</emphasis> group. By default it permits
++      access to the target user if the applicant user is a member of the
+       <emphasis>wheel</emphasis> group. If no group with this name exist,
+       the module is using the group with the group-ID
+       <emphasis remap='B'>0</emphasis>.
+@@ -97,7 +97,8 @@
+         </term>
+         <listitem>
+           <para>
+-            The check for wheel membership is done only.
++            The check for wheel membership is done only when the target user
++            UID is 0.
+           </para>
+         </listitem>
+       </varlistentry>

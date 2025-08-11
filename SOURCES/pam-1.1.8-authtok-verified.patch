@@ -1,0 +1,73 @@
+diff --git a/libpam/pam_get_authtok.c b/libpam/pam_get_authtok.c
+index 800c6e5..3cdec5e 100644
+--- a/libpam/pam_get_authtok.c
++++ b/libpam/pam_get_authtok.c
+@@ -140,6 +140,8 @@ pam_get_authtok_internal (pam_handle_t *pamh, int item,
+     }
+   else if (chpass)
+     {
++      pamh->authtok_verified = 0;
++
+       retval = pam_prompt (pamh, PAM_PROMPT_ECHO_OFF, &resp[0],
+ 			   PROMPT1, authtok_type,
+ 			   strlen (authtok_type) > 0?" ":"");
+@@ -184,6 +186,9 @@ pam_get_authtok_internal (pam_handle_t *pamh, int item,
+   if (retval != PAM_SUCCESS)
+     return retval;
+ 
++  if (chpass > 1)
++    pamh->authtok_verified = 1;
++
+   return pam_get_item(pamh, item, (const void **)authtok);
+ }
+ 
+@@ -214,6 +219,9 @@ pam_get_authtok_verify (pam_handle_t *pamh, const char **authtok,
+   if (authtok == NULL || pamh->choice != PAM_CHAUTHTOK)
+     return PAM_SYSTEM_ERR;
+ 
++  if (pamh->authtok_verified)
++    return pam_get_item (pamh, PAM_AUTHTOK, (const void **)authtok);
++
+   if (prompt != NULL)
+     {
+       retval = pam_prompt (pamh, PAM_PROMPT_ECHO_OFF, &resp,
+@@ -239,6 +247,7 @@ pam_get_authtok_verify (pam_handle_t *pamh, const char **authtok,
+ 
+   if (strcmp (*authtok, resp) != 0)
+     {
++      pamh->authtok_verified = 0;
+       pam_set_item (pamh, PAM_AUTHTOK, NULL);
+       pam_error (pamh, MISTYPED_PASS);
+       _pam_overwrite (resp);
+@@ -252,5 +261,7 @@ pam_get_authtok_verify (pam_handle_t *pamh, const char **authtok,
+   if (retval != PAM_SUCCESS)
+     return retval;
+ 
++  pamh->authtok_verified = 1;
++
+   return pam_get_item(pamh, PAM_AUTHTOK, (const void **)authtok);
+ }
+diff --git a/libpam/pam_private.h b/libpam/pam_private.h
+index 7ff9f75..58a26f5 100644
+--- a/libpam/pam_private.h
++++ b/libpam/pam_private.h
+@@ -172,6 +172,7 @@ struct pam_handle {
+ #ifdef HAVE_LIBAUDIT
+     int audit_state;             /* keep track of reported audit messages */
+ #endif
++    int authtok_verified;
+ };
+ 
+ /* Values for select arg to _pam_dispatch() */
+diff --git a/libpam/pam_start.c b/libpam/pam_start.c
+index 328416d..e27c64b 100644
+--- a/libpam/pam_start.c
++++ b/libpam/pam_start.c
+@@ -94,6 +94,7 @@ int pam_start (
+ #endif
+     (*pamh)->xdisplay = NULL;
+     (*pamh)->authtok_type = NULL;
++    (*pamh)->authtok_verified = 0;
+     memset (&((*pamh)->xauth), 0, sizeof ((*pamh)->xauth));
+ 
+     if (((*pamh)->pam_conversation = (struct pam_conv *)

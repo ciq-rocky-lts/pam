@@ -1,0 +1,12 @@
+diff -up Linux-PAM-1.1.8/modules/pam_unix/support.h.max-fd-no Linux-PAM-1.1.8/modules/pam_unix/support.h
+--- Linux-PAM-1.1.8/modules/pam_unix/support.h.max-fd-no	2017-11-02 14:04:25.895425318 +0100
++++ Linux-PAM-1.1.8/modules/pam_unix/support.h	2019-08-06 14:46:59.237125151 +0200
+@@ -141,7 +141,7 @@ static const UNIX_Ctrls unix_args[UNIX_C
+ 
+ #define UNIX_DEFAULTS  (unix_args[UNIX__NONULL].flag)
+ 
+-#define MAX_FD_NO 2000000
++#define MAX_FD_NO 65535
+ 
+ /* use this to free strings. ESPECIALLY password strings */
+ 
